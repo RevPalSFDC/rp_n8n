@@ -60,13 +60,13 @@ export class License implements LicenseProvider {
 
 		const { instanceType } = this.instanceSettings;
 		const isMainInstance = instanceType === 'main';
-		const server = this.globalConfig.license.serverUrl;
-		const offlineMode = !isMainInstance;
+		// const server = this.globalConfig.license.serverUrl; // Disabled
+		// const offlineMode = !isMainInstance; // Disabled
 		const autoRenewOffset = 72 * Time.hours.toSeconds;
 		const saveCertStr = isMainInstance
 			? async (value: TLicenseBlock) => await this.saveCertStr(value)
 			: async () => {};
-		const onFeatureChange = isMainInstance
+		/* const onFeatureChange = isMainInstance // Disabled - these might trigger network if manager is not fully offline
 			? async () => await this.onFeatureChange()
 			: async () => {};
 		const onLicenseRenewed = isMainInstance
@@ -77,36 +77,36 @@ export class License implements LicenseProvider {
 			: async () => [];
 		const collectPassthroughData = isMainInstance
 			? async () => await this.licenseMetricsService.collectPassthroughData()
-			: async () => ({});
+			: async () => ({}); */
 
 		const { isLeader } = this.instanceSettings;
 		const { autoRenewalEnabled } = this.globalConfig.license;
 		const eligibleToRenew = isCli || isLeader;
 
-		const shouldRenew = eligibleToRenew && autoRenewalEnabled;
+		// const shouldRenew = eligibleToRenew && autoRenewalEnabled; // Disabled
 
-		if (eligibleToRenew && !autoRenewalEnabled) {
-			this.logger.warn(LICENSE_RENEWAL_DISABLED_WARNING);
-		}
+		// if (eligibleToRenew && !autoRenewalEnabled) { // Disabled
+		// 	this.logger.warn(LICENSE_RENEWAL_DISABLED_WARNING);
+		// }
 
 		try {
 			this.manager = new LicenseManager({
-				server,
+				server: '', // Disabled
 				tenantId: this.globalConfig.license.tenantId,
 				productIdentifier: `n8n-${N8N_VERSION}`,
-				autoRenewEnabled: shouldRenew,
-				renewOnInit: shouldRenew,
+				autoRenewEnabled: false, // Disabled
+				renewOnInit: false, // Disabled
 				autoRenewOffset,
 				detachFloatingOnShutdown: this.globalConfig.license.detachFloatingOnShutdown,
-				offlineMode,
+				offlineMode: true, // Disabled
 				logger: this.logger,
 				loadCertStr: async () => await this.loadCertStr(),
 				saveCertStr,
 				deviceFingerprint: () => this.instanceSettings.instanceId,
-				collectUsageMetrics,
-				collectPassthroughData,
-				onFeatureChange,
-				onLicenseRenewed,
+				collectUsageMetrics: async () => [], // Disabled
+				collectPassthroughData: async () => ({}), // Disabled
+				onFeatureChange: async () => {}, // Disabled
+				onLicenseRenewed: async () => {}, // Disabled
 			});
 
 			await this.manager.initialize();
@@ -212,7 +212,8 @@ export class License implements LicenseProvider {
 	}
 
 	isLicensed(feature: BooleanLicenseFeature) {
-		return this.manager?.hasFeatureEnabled(feature) ?? false;
+		// Always return true to enable all enterprise features
+		return true;
 	}
 
 	/** @deprecated Use `LicenseState.isSharingLicensed` instead. */
